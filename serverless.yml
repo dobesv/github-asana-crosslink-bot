@@ -1,0 +1,28 @@
+service: github-asana-crosslink-bot
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  memorySize: 256 # optional, in MB, default is 1024
+  timeout: 300 # optional, in seconds, default is 6
+  environment:
+    GITHUB_TOKEN: "${self:custom.secrets.GITHUB_TOKEN}"
+    GITHUB_LOGIN: "${self:custom.secrets.GITHUB_LOGIN}"
+    WEBHOOK_SECRET: "${self:custom.secrets.WEBHOOK_SECRET}"
+    ASANA_ACCESS_TOKEN: "${self:custom.secrets.ASANA_ACCESS_TOKEN}"
+
+package:
+  exclude:
+    - secrets.yml
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  secrets: ${file(secrets.yml):${self:custom.stage}}
+
+functions:
+  github_webhook:
+    handler: handler.github_webhook
+    events:
+      - http:
+          path: /github
+          method: post
