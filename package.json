@@ -1,0 +1,19 @@
+{
+  "name": "rebasebot-serverless",
+  "version": "1.0.0",
+  "main": "handler.js",
+  "author": "Dobes Vandermeer <dobesv@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "asana": "^0.15.1",
+    "bluebird": "^3.5.1",
+    "lambda-git": "^0.1.2",
+    "lodash": "^4.17.5",
+    "request": "^2.85.0",
+    "request-promise": "^4.2.2",
+    "stream": "^0.0.2"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1"
+  }
+}
