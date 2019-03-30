@@ -14,6 +14,6 @@
     "stream": "^0.0.2"
   },
   "devDependencies": {
-    "eslint": "4.19.1"
+    "eslint": "5.16.0"
   }
 }
