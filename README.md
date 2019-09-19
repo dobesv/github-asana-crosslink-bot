@@ -8,6 +8,13 @@ Automatically reverse-link github PRs / Issues and Asana tasks
 
 2. Copy secrets-template.yml to secrets.yml and fill in the blanks
 
+3. Install serverless on your PATH:
+
+```
+    $ yarn global add serverless
+    $ export PATH="$(yarn global bin):$PATH"
+```
+
 ## Deployment
 
 `serverless deploy`
