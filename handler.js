@@ -47,7 +47,7 @@ const extract_asana_task_links = text =>
 
 const extract_asana_task_link_id = asana_link => parseInt(get(/https:\/\/app.asana.com\/0\/[0-9]+\/([0-9]+)/.exec(asana_link), [1], '0'));
 
-const add_backlinks_for_asana_tasks = async (text, old_text, target_url) => {
+const add_backlinks_for_asana_tasks = async (text, old_text, target_url, action) => {
   let asana_links_found = extract_asana_task_links(text || '');
   let links_already_there = extract_asana_task_links(old_text || '');
   return Promise.all(
@@ -59,7 +59,7 @@ const add_backlinks_for_asana_tasks = async (text, old_text, target_url) => {
           const task = await asana.tasks.findById(task_id);
           await asana.tasks.addComment(task_id, {
             task: task_id,
-            text: target_url,
+            text: [target_url, action].filter(Boolean).join(' ')
           });
         } catch (err) {
           console.warn(err);
@@ -79,13 +79,14 @@ module.exports.github_webhook = handler(async (data, event, context) => {
     entity &&
     entity.body &&
     entity.html_url &&
-    (['created', 'opened'].includes(data.action) ||
+    (['created', 'opened', 'closed', 'reopened'].includes(data.action) ||
       (data.action === 'edited' && data.changes.body.from))
   ) {
     await add_backlinks_for_asana_tasks(
       entity.body,
       data.action === 'edited' ? data.changes.body.from : '',
       entity.html_url,
+      data.action === 'closed' && data.pull_request && data.pull_request.merged ? 'merged' : (data.action || '')
     );
   }
 });
