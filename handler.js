@@ -12,6 +12,7 @@ const settings = {
 const asana = require('asana')
   .Client.create()
   .useAccessToken(process.env.ASANA_ACCESS_TOKEN);
+const marked = require('marked');
 
 // Helpers for returning a response
 const badRequest = err => ({ statusCode: 400, body: String(err) });
@@ -47,7 +48,7 @@ const extract_asana_task_links = text =>
 
 const extract_asana_task_link_id = asana_link => parseInt(get(/https:\/\/app.asana.com\/0\/[0-9]+\/([0-9]+)/.exec(asana_link), [1], '0'));
 
-const add_backlinks_for_asana_tasks = async (text, old_text, target_url, action) => {
+const add_backlinks_for_asana_tasks = async (text, old_text, title, target_url, action) => {
   let asana_links_found = extract_asana_task_links(text || '');
   let links_already_there = extract_asana_task_links(old_text || '');
   return Promise.all(
@@ -56,10 +57,10 @@ const add_backlinks_for_asana_tasks = async (text, old_text, target_url, action)
       const task_id = extract_asana_task_link_id(asana_link);
       if (task_id) {
         try {
-          const task = await asana.tasks.findById(task_id);
+          // const task = await asana.tasks.findById(task_id);
           await asana.tasks.addComment(task_id, {
             task: task_id,
-            text: [target_url, action].filter(Boolean).join(' ')
+            text: marked([[title ? `[${title}](${target_url})` : target_url, action].filter(Boolean).join(' '), text].filter(Boolean).join('\n\n'))
           });
         } catch (err) {
           console.warn(err);
@@ -85,8 +86,9 @@ module.exports.github_webhook = handler(async (data, event, context) => {
     await add_backlinks_for_asana_tasks(
       entity.body,
       data.action === 'edited' ? data.changes.body.from : '',
+      entity.title || (data.comment && 'comment') || (data.issue && 'issue'),
       entity.html_url,
-      data.action === 'closed' && data.pull_request && data.pull_request.merged ? 'merged' : (data.action || '')
+      data.action === 'closed' && entity.merged ? 'merged' : (data.action || '')
     );
   }
 });
