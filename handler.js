@@ -60,7 +60,7 @@ const add_backlinks_for_asana_tasks = async (text, old_text, title, target_url, 
           // const task = await asana.tasks.findById(task_id);
           await asana.tasks.addComment(task_id, {
             task: task_id,
-            text: marked([[title ? `[${title}](${target_url})` : target_url, action].filter(Boolean).join(' '), text].filter(Boolean).join('\n\n'))
+            html_text: marked([[title ? `[${title}](${target_url})` : target_url, action].filter(Boolean).join(' '), text].filter(Boolean).join('\n\n'))
           });
         } catch (err) {
           console.warn(err);
