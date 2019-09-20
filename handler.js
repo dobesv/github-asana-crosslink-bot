@@ -20,6 +20,8 @@ const renderer = new marked.Renderer();
 
 renderer.paragraph = text => `\n${text}\n`;
 renderer.br = () => "\n";
+renderer.checkbox = checked => (checked ? "\u2611" : "\u2610");
+renderer.code = code => `<code>${code}</code>`;
 
 marked.setOptions({
   renderer: renderer,
