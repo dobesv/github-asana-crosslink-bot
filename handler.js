@@ -70,7 +70,7 @@ const extract_asana_task_link_id = asana_link =>
   get(
     /https:\/\/app.asana.com\/0\/[0-9]+\/([0-9]+)/.exec(asana_link),
     [1],
-    "0"
+    ""
   );
 
 const add_backlinks_for_asana_tasks = async (
