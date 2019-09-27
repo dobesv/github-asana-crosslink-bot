@@ -3,9 +3,6 @@
 const difference = require("lodash/difference");
 const uniq = require("lodash/uniq");
 const settings = {
-  github_token: process.env.GITHUB_TOKEN,
-  login: process.env.GITHUB_LOGIN,
-  webhook_secret: process.env.WEBHOOK_SECRET || "x",
   debug: false,
   devProject: process.env.ASANA_PROJECT,
   prSection: process.env.ASANA_PR_OPEN_SECTION,
