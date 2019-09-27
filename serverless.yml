@@ -10,7 +10,9 @@ provider:
     GITHUB_LOGIN: "${self:custom.secrets.GITHUB_LOGIN}"
     WEBHOOK_SECRET: "${self:custom.secrets.WEBHOOK_SECRET}"
     ASANA_ACCESS_TOKEN: "${self:custom.secrets.ASANA_ACCESS_TOKEN}"
-
+    ASANA_PROJECT: "${self:custom.secrets.ASANA_PROJECT}"
+    ASANA_PR_OPEN_SECTION: "${self:custom.secrets.ASANA_PR_OPEN_SECTION}"
+    ASANA_MERGED_SECTION: "${self:custom.secrets.ASANA_MERGED_SECTION}"
 package:
   exclude:
     - secrets.yml

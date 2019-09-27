@@ -10,7 +10,10 @@ const settings = {
 };
 const asana = require("asana")
   .Client.create({
-    defaultHeaders: { "asana-enable": "string_ids,new_rich_text,new_sections" }
+    defaultHeaders: {
+      "asana-enable": "string_ids,new_rich_text",
+      "asana-disable": "new_sections" // Our project has not been migrated to "new sections"
+    }
   })
   .useAccessToken(process.env.ASANA_ACCESS_TOKEN);
 const marked = require("marked");
@@ -104,7 +107,7 @@ const add_backlinks_for_asana_tasks = async (
                   [title ? `[${title}](${target_url})` : target_url, action]
                     .filter(Boolean)
                     .join(" "),
-                  ['opened', 'created', 'edited'].includes(action) ? text : ''
+                  ["opened", "created", "edited"].includes(action) ? text : ""
                 ]
                   .filter(Boolean)
                   .join("\n\n")
@@ -112,24 +115,43 @@ const add_backlinks_for_asana_tasks = async (
             ),
             "</body>"
           ].join("");
-          console.log({ task_gid: task_gid, html_text: html_text });
+          let is_controlled = controlled_task_gids.includes(task_gid);
+          console.log({
+            task_gid: task_gid,
+            action: action,
+            is_controlled: is_controlled,
+            html_text: html_text,
+            target_url: target_url
+          });
           await asana.tasks.addComment(task_gid, {
             task_gid: task_gid,
             html_text: html_text
           });
+
+          console.log({
+            is_controlled: is_controlled,
+            devProject: settings.devProject,
+            is_pr: /\/pull\/[0-9]+/.test(target_url),
+            action: action
+          });
           if (
-            controlled_task_gids.includes(task_gid) &&
+            is_controlled &&
             settings.devProject &&
-            /pulls/.test(target_url) &&
-            (action === "opened" || action === "merged")
+            /\/pull\/[0-9]+/.test(target_url) &&
+            action !== "closed"
           ) {
+            const section =
+              action === "merged" ? settings.mergedSection : settings.prSection;
+            console.log({
+              task_gid: task_gid,
+              action: action,
+              project: settings.devProject,
+              section: section
+            });
             await asana.tasks.addProject(task_gid, {
               task_gid: task_gid,
               project: settings.devProject,
-              section:
-                action === "merged"
-                  ? settings.mergedSection
-                  : settings.prSection
+              section: section
             });
           }
         } catch (err) {
