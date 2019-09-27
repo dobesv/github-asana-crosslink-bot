@@ -104,7 +104,7 @@ const add_backlinks_for_asana_tasks = async (
                   [title ? `[${title}](${target_url})` : target_url, action]
                     .filter(Boolean)
                     .join(" "),
-                  text
+                  ['opened', 'created', 'edited'].includes(action) ? text : ''
                 ]
                   .filter(Boolean)
                   .join("\n\n")
