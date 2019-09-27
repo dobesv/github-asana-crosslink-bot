@@ -66,17 +66,20 @@ const handler = fn => (event, context, callback) => {
     });
 };
 
-const extract_asana_task_links = text =>
-  Array.from(
-    new Set(
-      text.match(
-        /([*-] fixes )?(\[[^\]]*]\()??https:\/\/app.asana.com\/0\/[0-9]+\/[0-9]+/gi
-      )
-    )
-  );
-
-const extract_asana_task_link_id = asana_link =>
-  get(/https:\/\/app.asana.com\/0\/[0-9]+\/([0-9]+)/.exec(asana_link), [1], "");
+const extract_asana_task_links = text => {
+  const links = [];
+  const re = /([*-] ([a-z]+) )?(\[.*]\()?(https:\/\/app.asana.com\/0\/([0-9]+)\/([0-9]+))/gi;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    links.push({
+      action: m[2],
+      url: m[4],
+      project_gid: m[5],
+      task_gid: m[6]
+    });
+  }
+  return links;
+};
 
 const add_backlinks_for_asana_tasks = async (
   text,
@@ -85,22 +88,18 @@ const add_backlinks_for_asana_tasks = async (
   target_url,
   action
 ) => {
-  const asana_links_found = extract_asana_task_links(text || "");
-  const links_already_there = extract_asana_task_links(old_text || "");
-  const task_gids_found = uniq(
-    asana_links_found.map(extract_asana_task_link_id)
-  );
-  const task_gids_already_there = uniq(
-    links_already_there.map(extract_asana_task_link_id)
-  );
-  const task_gids = difference(task_gids_found, task_gids_already_there);
+  const links = extract_asana_task_links(text || "");
+  const old_links = extract_asana_task_links(old_text || "");
+  const task_gids = uniq(links.map(link => link.task_gid));
+  const old_task_gids = uniq(old_links.map(link => link.task_gid));
+  const new_task_gids = difference(task_gids, old_task_gids);
   const controlled_task_gids = uniq(
-    asana_links_found
-      .filter(link => /[*-] fixes /.test(link))
-      .map(extract_asana_task_link_id)
+    links
+      .filter(link => link.action === "fixes" || link.action === "resolves")
+      .map(link => link.task_gid)
   );
   return Promise.all(
-    task_gids.map(async task_gid => {
+    new_task_gids.map(async task_gid => {
       if (task_gid) {
         try {
           let html_text = [
