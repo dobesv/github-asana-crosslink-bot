@@ -1,10 +1,7 @@
 "use strict";
 
-const get = require("lodash/get");
 const difference = require("lodash/difference");
 const uniq = require("lodash/uniq");
-const fs = require("fs");
-const github = require("./github");
 const settings = {
   github_token: process.env.GITHUB_TOKEN,
   login: process.env.GITHUB_LOGIN,
