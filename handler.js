@@ -1,13 +1,18 @@
 "use strict";
 
 const get = require("lodash/get");
+const difference = require("lodash/difference");
+const uniq = require("lodash/uniq");
 const fs = require("fs");
 const github = require("./github");
 const settings = {
   github_token: process.env.GITHUB_TOKEN,
   login: process.env.GITHUB_LOGIN,
   webhook_secret: process.env.WEBHOOK_SECRET || "x",
-  debug: false
+  debug: false,
+  devProject: process.env.ASANA_PROJECT,
+  prSection: process.env.ASANA_PR_OPEN_SECTION,
+  mergedSection: process.env.ASANA_MERGED_SECTION
 };
 const asana = require("asana")
   .Client.create({
@@ -63,15 +68,15 @@ const handler = fn => (event, context, callback) => {
 
 const extract_asana_task_links = text =>
   Array.from(
-    new Set(text.match(/https:\/\/app.asana.com\/0\/[0-9]+\/[0-9]+/g))
+    new Set(
+      text.match(
+        /([*-] fixes )?(\[[^\]]*]\()??https:\/\/app.asana.com\/0\/[0-9]+\/[0-9]+/gi
+      )
+    )
   );
 
 const extract_asana_task_link_id = asana_link =>
-  get(
-    /https:\/\/app.asana.com\/0\/[0-9]+\/([0-9]+)/.exec(asana_link),
-    [1],
-    ""
-  );
+  get(/https:\/\/app.asana.com\/0\/[0-9]+\/([0-9]+)/.exec(asana_link), [1], "");
 
 const add_backlinks_for_asana_tasks = async (
   text,
@@ -80,12 +85,22 @@ const add_backlinks_for_asana_tasks = async (
   target_url,
   action
 ) => {
-  let asana_links_found = extract_asana_task_links(text || "");
-  let links_already_there = extract_asana_task_links(old_text || "");
+  const asana_links_found = extract_asana_task_links(text || "");
+  const links_already_there = extract_asana_task_links(old_text || "");
+  const task_gids_found = uniq(
+    asana_links_found.map(extract_asana_task_link_id)
+  );
+  const task_gids_already_there = uniq(
+    links_already_there.map(extract_asana_task_link_id)
+  );
+  const task_gids = difference(task_gids_found, task_gids_already_there);
+  const controlled_task_gids = uniq(
+    asana_links_found
+      .filter(link => /[*-] fixes /.test(link))
+      .map(extract_asana_task_link_id)
+  );
   return Promise.all(
-    asana_links_found.map(async asana_link => {
-      if (links_already_there.includes(asana_link)) return;
-      const task_gid = extract_asana_task_link_id(asana_link);
+    task_gids.map(async task_gid => {
       if (task_gid) {
         try {
           let html_text = [
@@ -109,6 +124,21 @@ const add_backlinks_for_asana_tasks = async (
             task_gid: task_gid,
             html_text: html_text
           });
+          if (
+            controlled_task_gids.includes(task_gid) &&
+            settings.devProject &&
+            /pulls/.test(target_url) &&
+            (action === "opened" || action === "merged")
+          ) {
+            await asana.tasks.addProject(task_gid, {
+              task_gid: task_gid,
+              project: settings.devProject,
+              section:
+                action === "merged"
+                  ? settings.mergedSection
+                  : settings.prSection
+            });
+          }
         } catch (err) {
           console.warn(err);
           const errors = (err.value && err.value.errors) || err.errors || [];
