@@ -11,8 +11,7 @@ const settings = {
 const asana = require("asana")
   .Client.create({
     defaultHeaders: {
-      "asana-enable": "string_ids,new_rich_text",
-      "asana-disable": "new_sections" // Our project has not been migrated to "new sections"
+      "asana-enable": "string_ids,new_rich_text,new_sections",
     }
   })
   .useAccessToken(process.env.ASANA_ACCESS_TOKEN);
