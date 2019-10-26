@@ -7,7 +7,11 @@ Automatically reverse-link github PRs / Issues and Asana tasks
    to all the repos you want to use this bot on.
 
 2. Copy secrets-template.yml to secrets.yml and fill in the blanks
-
+   
+   To get project IDs and section IDs you can use the API explorer:
+   
+   https://asana.com/developers/api-reference/projects#   
+      
 3. Install serverless on your PATH:
 
 ```
