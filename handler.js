@@ -68,7 +68,7 @@ const extract_asana_task_links = text => {
   let m;
   while ((m = re.exec(text)) !== null) {
     links.push({
-      action: m[2],
+      action: m[2] && m[2].toLowerCase(),
       url: m[4],
       project_gid: m[5],
       task_gid: m[6]
