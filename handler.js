@@ -11,7 +11,7 @@ const settings = {
 const asana = require("asana")
   .Client.create({
     defaultHeaders: {
-      "asana-enable": "string_ids,new_rich_text,new_sections",
+      "asana-enable": "string_ids,new_rich_text,new_sections"
     }
   })
   .useAccessToken(process.env.ASANA_ACCESS_TOKEN);
@@ -103,13 +103,14 @@ const add_backlinks_for_asana_tasks = async (
             he.decode(
               marked(
                 [
-                  [title ? `[${title}](${target_url})` : target_url, action]
-                    .filter(Boolean)
-                    .join(" "),
+                  title,
+                  target_url,
+                  action,
+                  "\n\n",
                   ["opened", "created", "edited"].includes(action) ? text : ""
                 ]
                   .filter(Boolean)
-                  .join("\n\n")
+                  .join(" ")
               )
             ),
             "</body>"
@@ -173,15 +174,32 @@ module.exports.github_webhook = handler(async (data, event, context) => {
     entity &&
     entity.body &&
     entity.html_url &&
-    (["created", "opened", "closed", "reopened"].includes(data.action) ||
+    ([
+      "created",
+      "opened",
+      "closed",
+      "reopened",
+      "labeled",
+      "unlabeled"
+    ].includes(data.action) ||
       (data.action === "edited" && data.changes.body.from))
   ) {
+    const title = [
+      entity.title || (data.comment && "comment") || (data.issue && "issue"),
+      ...((data.pull_request &&
+        data.pull_request.labels &&
+        data.pull_request.labels.map(label => "(" + label.name + ")")) ||
+        [])
+    ].join(" ");
+    const oldText = data.action === "edited" ? data.changes.body.from : "";
+    const action =
+      data.action === "closed" && entity.merged ? "merged" : data.action || "";
     await add_backlinks_for_asana_tasks(
       entity.body,
-      data.action === "edited" ? data.changes.body.from : "",
-      entity.title || (data.comment && "comment") || (data.issue && "issue"),
+      oldText,
+      title,
       entity.html_url,
-      data.action === "closed" && entity.merged ? "merged" : data.action || ""
+      action
     );
   }
 });
