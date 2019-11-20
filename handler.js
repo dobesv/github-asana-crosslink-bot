@@ -105,7 +105,7 @@ const add_backlinks_for_asana_tasks = async (
               marked(
                 [
                   title,
-                  action,
+                  `**${action}**`,
                   "\n\n",
                   ["opened", "created", "edited"].includes(action) ? text : "",
                   "\n\n",
