@@ -82,7 +82,8 @@ const add_backlinks_for_asana_tasks = async (
   old_text,
   title,
   target_url,
-  action
+  action,
+  labels
 ) => {
   const links = extract_asana_task_links(text || "");
   const old_links = extract_asana_task_links(old_text || "");
@@ -107,7 +108,9 @@ const add_backlinks_for_asana_tasks = async (
                   target_url,
                   action,
                   "\n\n",
-                  ["opened", "created", "edited"].includes(action) ? text : ""
+                  ["opened", "created", "edited"].includes(action) ? text : "",
+                  "\n\n",
+                  labels
                 ]
                   .filter(Boolean)
                   .join(" ")
@@ -184,13 +187,13 @@ module.exports.github_webhook = handler(async (data, event, context) => {
     ].includes(data.action) ||
       (data.action === "edited" && data.changes.body.from))
   ) {
-    const title = [
-      entity.title || (data.comment && "comment") || (data.issue && "issue"),
-      ...((data.pull_request &&
+    const title =
+      entity.title || (data.comment && "comment") || (data.issue && "issue");
+    const labels =
+      ((data.pull_request &&
         data.pull_request.labels &&
-        data.pull_request.labels.map(label => "`" + label.name + "`")) ||
-        [])
-    ].join(" ");
+        data.pull_request.labels.map(label => "\n- 🏷 " + label.name)) ||
+      []).join('');
     const oldText = data.action === "edited" ? data.changes.body.from : "";
     const action =
       data.action === "closed" && entity.merged ? "merged" : data.action || "";
@@ -199,7 +202,8 @@ module.exports.github_webhook = handler(async (data, event, context) => {
       oldText,
       title,
       entity.html_url,
-      action
+      action,
+      labels
     );
   }
 });
