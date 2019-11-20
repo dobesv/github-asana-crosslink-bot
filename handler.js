@@ -188,7 +188,7 @@ module.exports.github_webhook = handler(async (data, event, context) => {
       entity.title || (data.comment && "comment") || (data.issue && "issue"),
       ...((data.pull_request &&
         data.pull_request.labels &&
-        data.pull_request.labels.map(label => "(" + label.name + ")")) ||
+        data.pull_request.labels.map(label => "`" + label.name + "`")) ||
         [])
     ].join(" ");
     const oldText = data.action === "edited" ? data.changes.body.from : "";
