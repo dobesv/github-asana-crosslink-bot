@@ -5,7 +5,7 @@
   "author": "Dobes Vandermeer <dobesv@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "asana": "^0.17.3",
+    "asana": "^0.18.0",
     "bluebird": "^3.5.1",
     "he": "^1.2.0",
     "lambda-git": "^0.1.2",
