@@ -69,10 +69,10 @@ argparse@^1.0.7:
   dependencies:
     sprintf-js "~1.0.2"
 
-asana@^0.17.3:
-  version "0.17.3"
-  resolved "https://registry.yarnpkg.com/asana/-/asana-0.17.3.tgz#8e41e6dfa1ad53465aaef1827abb20cb0a415711"
-  integrity sha512-P1zD40F+VedaY19GDeyB+KIjVg1vnVvC4uD3bO+d7FtLNKNuHN6Q/HVM2dw4cXrfa7UQlVLO10GBthhotdkkaA==
+asana@^0.18.0:
+  version "0.18.0"
+  resolved "https://registry.yarnpkg.com/asana/-/asana-0.18.0.tgz#61334361b48e418371817032b2fc54ec4f5dd729"
+  integrity sha512-pm7AQwXUepY4L3Q1BObwIxUbEWEkQQ5GdvB+GImNenrMso+PH4tI8CJvAN7aIyyp7Zxic/c8oiJ/C4lkfw9Fbg==
   dependencies:
     bluebird "^2.3.0"
     browser-request "^0.3.2"
