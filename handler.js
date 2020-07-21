@@ -6,7 +6,9 @@ const settings = {
   debug: false,
   devProject: process.env.ASANA_PROJECT,
   prSection: process.env.ASANA_PR_OPEN_SECTION,
-  mergedSection: process.env.ASANA_MERGED_SECTION
+  mergedSection: process.env.ASANA_MERGED_SECTION,
+  stagingSection: process.env.ASANA_STAGING_SECTION,
+  productionSection: process.env.ASANA_PRODUCTION_SECTION
 };
 const asana = require("asana")
   .Client.create({
@@ -82,8 +84,7 @@ const add_backlinks_for_asana_tasks = async (
   old_text,
   title,
   target_url,
-  action,
-  labels
+  action
 ) => {
   const links = extract_asana_task_links(text || "");
   const old_links = extract_asana_task_links(old_text || "");
@@ -92,7 +93,7 @@ const add_backlinks_for_asana_tasks = async (
   const new_task_gids = difference(task_gids, old_task_gids);
   const controlled_task_gids = uniq(
     links
-      .filter(link => link.action === "fixes" || link.action === "resolves")
+      .filter(link => /fix(es)?|resolves?|implements?|completes|does/i.test(link.action || 'refs'))
       .map(link => link.task_gid)
   );
   return Promise.all(
@@ -108,10 +109,8 @@ const add_backlinks_for_asana_tasks = async (
                   `**${action}**`,
                   "\n\n",
                   ["opened", "created", "edited"].includes(action) ? text : "",
-                  "\n\n",
-                  labels,
-                  "\n- 🔗",
-                  target_url,
+                  "\n\n- 🔗",
+                  target_url
                 ]
                   .filter(Boolean)
                   .join(" ")
@@ -145,7 +144,15 @@ const add_backlinks_for_asana_tasks = async (
             action !== "closed"
           ) {
             const section =
-              action === "merged" ? settings.mergedSection : settings.prSection;
+              action === "was deployed to production" &&
+              settings.productionSection
+                ? settings.productionSection
+                : action === "was deployed to staging" &&
+                  settings.stagingSection
+                ? settings.stagingSection
+                : action === "merged"
+                ? settings.mergedSection
+                : settings.prSection;
             console.log({
               task_gid: task_gid,
               action: action,
@@ -174,6 +181,17 @@ module.exports.github_webhook = handler(async (data, event, context) => {
 
   const entity = data.comment || data.issue || data.pull_request;
 
+  console.log({
+    action: data.action,
+    title:
+      (entity && entity.title) ||
+      (data.comment && "comment") ||
+      (data.issue && "issue") ||
+      "?",
+    label: data.label && data.label.name,
+    html_url: entity && entity.html_url
+  });
+
   if (
     entity &&
     entity.body &&
@@ -190,21 +208,23 @@ module.exports.github_webhook = handler(async (data, event, context) => {
   ) {
     const title =
       entity.title || (data.comment && "comment") || (data.issue && "issue");
-    const labels =
-      ((data.pull_request &&
-        data.pull_request.labels &&
-        data.pull_request.labels.map(label => "\n- 🏷 " + label.name)) ||
-      []).join('');
     const oldText = data.action === "edited" ? data.changes.body.from : "";
     const action =
-      data.action === "closed" && entity.merged ? "merged" : data.action || "";
+      data.action === "labeled" &&
+      data.label &&
+      ["production", "staging"].includes(data.label.name)
+        ? `was deployed to ${data.label.name}`
+        : ["labeled", "unlabeled"].includes(data.action)
+        ? [data.action, data.label.name].join(" ")
+        : data.action === "closed" && entity.merged
+        ? "merged"
+        : data.action || "";
     await add_backlinks_for_asana_tasks(
       entity.body,
       oldText,
       title,
       entity.html_url,
-      action,
-      labels
+      action
     );
   }
 });
