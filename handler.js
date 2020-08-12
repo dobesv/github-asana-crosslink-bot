@@ -93,7 +93,11 @@ const add_backlinks_for_asana_tasks = async (
   const new_task_gids = difference(task_gids, old_task_gids);
   const controlled_task_gids = uniq(
     links
-      .filter(link => /fix(es)?|resolves?|implements?|completes|does/i.test(link.action || 'refs'))
+      .filter(link =>
+        /fix(es)?|resolves?|implements?|completes|does/i.test(
+          link.action || "refs"
+        )
+      )
       .map(link => link.task_gid)
   );
   return Promise.all(
@@ -204,11 +208,20 @@ module.exports.github_webhook = handler(async (data, event, context) => {
       "labeled",
       "unlabeled"
     ].includes(data.action) ||
-      (data.action === "edited" && data.changes.body.from))
+      (data.action === "edited" &&
+        data.changes &&
+        data.changes.body &&
+        data.changes.body.from))
   ) {
     const title =
       entity.title || (data.comment && "comment") || (data.issue && "issue");
-    const oldText = data.action === "edited" ? data.changes.body.from : "";
+    const oldText =
+      data.action === "edited" &&
+      data.changes &&
+      data.changes.body &&
+      data.changes.body.from
+        ? data.changes.body.from
+        : "";
     const action =
       data.action === "labeled" &&
       data.label &&
