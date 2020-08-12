@@ -2,7 +2,7 @@ service: github-asana-crosslink-bot
 
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs12.x
   memorySize: 256 # optional, in MB, default is 1024
   timeout: 300 # optional, in seconds, default is 6
   environment:
@@ -13,6 +13,8 @@ provider:
     ASANA_PROJECT: "${self:custom.secrets.ASANA_PROJECT}"
     ASANA_PR_OPEN_SECTION: "${self:custom.secrets.ASANA_PR_OPEN_SECTION}"
     ASANA_MERGED_SECTION: "${self:custom.secrets.ASANA_MERGED_SECTION}"
+    ASANA_STAGING_SECTION: "${self:custom.secrets.ASANA_STAGING_SECTION}"
+    ASANA_PRODUCTION_SECTION: "${self:custom.secrets.ASANA_PRODUCTION_SECTION}"
 package:
   exclude:
     - secrets.yml

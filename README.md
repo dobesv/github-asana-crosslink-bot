@@ -1,4 +1,5 @@
 # github-asana-crosslink-bot
+
 Automatically reverse-link github PRs / Issues and Asana tasks
 
 ## Setup
@@ -8,10 +9,21 @@ Automatically reverse-link github PRs / Issues and Asana tasks
 
 2. Copy secrets-template.yml to secrets.yml and fill in the blanks
    
-   To get project IDs and section IDs you can use the API explorer:
+   To get project IDs and section IDs you can use the API:
    
-   https://asana.com/developers/api-reference/projects#   
-      
+   ASANA_ACCESS_TOKEN=$(yq r secrets.yml dev.ASANA_ACCESS_TOKEN)
+   curl -X GET https://app.asana.com/api/1.0/projects \
+     -H 'Accept: application/json' \
+     -H "Authorization: Bearer ${ASANA_ACCESS_TOKEN}" | yq read --prettyPrint -
+   ASANA_PROJECT=xxx
+   curl -X GET https://app.asana.com/api/1.0/projects/${ASANA_PROJECT}/sections \
+     -H 'Accept: application/json' \
+     -H "Authorization: Bearer ${ASANA_ACCESS_TOKEN}" | yq read --prettyPrint -
+
+   If you don't have the `yq` command then you can hopefully figure out how to replicate these
+   `yq` operations in another way.
+   
+        
 3. Install serverless on your PATH:
 
 ```
