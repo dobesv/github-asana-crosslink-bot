@@ -6,7 +6,7 @@
   "license": "MIT",
   "dependencies": {
     "asana": "^0.18.0",
-    "bluebird": "^3.5.1",
+    "bluebird": "^3.7.2",
     "he": "^1.2.0",
     "lambda-git": "^0.1.2",
     "lodash": "^4.17.5",
