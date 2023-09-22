@@ -16,7 +16,7 @@
     "stream": "^0.0.2"
   },
   "devDependencies": {
-    "eslint": "7.25.0",
+    "eslint": "8.50.0",
     "prettier": "2.2.1"
   },
   "scripts": {
